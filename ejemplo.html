@@ -39,6 +39,155 @@
         <tbody></tbody>
     </table>
 
-    
+    <script>
+        // Configuración inicial
+        let cinta = ['B'];
+        let posicionCabezal = 0;
+        let estadoActual = 'q0';
+        let paso = 0;
+        let resultado = '';
+        
+        // Tabla de transiciones (δ)
+        const tablaTransiciones = {
+            'q0': { // Busca el primer '('
+                '(': { escribe: 'X', mueve: 'R', siguienteEstado: 'q1' }, // Marca '(' como X
+                ')': { escribe: ')', mueve: 'R', siguienteEstado: 'q_reject' }, // Error: ')' sin '('
+                'X': { escribe: 'X', mueve: 'R', siguienteEstado: 'q0' },
+                'B': { escribe: 'B', mueve: 'L', siguienteEstado: 'q_accept' } // Cadena vacía o balanceada
+            },
+            'q1': { // Busca el ')' correspondiente
+                '(': { escribe: 'X', mueve: 'R', siguienteEstado: 'q1' }, // Marca otro '('
+                ')': { escribe: 'X', mueve: 'L', siguienteEstado: 'q2' }, // Encuentra ')', retrocede
+                'X': { escribe: 'X', mueve: 'R', siguienteEstado: 'q1' },
+                'B': { escribe: 'B', mueve: 'L', siguienteEstado: 'q_reject' } // No hay ')'
+            },
+            'q2': { // Retrocede para encontrar el '(' marcado
+                '(': { escribe: '(', mueve: 'L', siguienteEstado: 'q_reject' }, // Error
+                ')': { escribe: ')', mueve: 'L', siguienteEstado: 'q2' },
+                'X': { escribe: 'X', mueve: 'R', siguienteEstado: 'q0' }, // Vuelve al inicio
+                'B': { escribe: 'B', mueve: 'R', siguienteEstado: 'q0' }
+            },
+            'q_accept': {}, // Estado de aceptación
+            'q_reject': {}  // Estado de rechazo
+        };
+
+        // Inicializar la cinta y la tabla de instrucciones
+        function inicializar() {
+            // Dibujar cinta
+            const divCinta = document.getElementById('cinta');
+            divCinta.innerHTML = '';
+            cinta.forEach((valor, index) => {
+                const celda = document.createElement('div');
+                celda.className = 'celda';
+                celda.textContent = valor;
+                if (index === posicionCabezal) {
+                    const cabezal = document.createElement('div');
+                    cabezal.className = 'cabezal';
+                    cabezal.textContent = '↓';
+                    celda.appendChild(cabezal);
+                }
+                divCinta.appendChild(celda);
+            });
+
+            // Dibujar tabla de instrucciones
+            const tabla = document.querySelector('#tabla-instrucciones tbody');
+            tabla.innerHTML = '';
+            for (const estado in tablaTransiciones) {
+                for (const simbolo in tablaTransiciones[estado]) {
+                    const transicion = tablaTransiciones[estado][simbolo];
+                    const fila = document.createElement('tr');
+                    if (estado === estadoActual && simbolo === cinta[posicionCabezal]) {
+                        fila.classList.add('instruccion-activa');
+                    }
+                    fila.innerHTML = `
+                        <td>${estado}</td>
+                        <td>${simbolo}</td>
+                        <td>${transicion.escribe}</td>
+                        <td>${transicion.mueve}</td>
+                        <td>${transicion.siguienteEstado}</td>
+                    `;
+                    tabla.appendChild(fila);
+                }
+            }
+
+            // Actualizar estado y paso
+            document.getElementById('estado-actual').textContent = estadoActual;
+            document.getElementById('paso-actual').textContent = paso;
+
+            // Mostrar resultado
+            const divResultado = document.getElementById('resultado');
+            if (estadoActual === 'q_accept') {
+                divResultado.textContent = '✓ Cadena ACEPTADA (paréntesis balanceados)';
+                divResultado.className = 'aceptado';
+            } else if (estadoActual === 'q_reject') {
+                divResultado.textContent = '✗ Cadena RECHAZADA (paréntesis no balanceados)';
+                divResultado.className = 'rechazado';
+            } else {
+                divResultado.textContent = '';
+                divResultado.className = '';
+            }
+        }
+
+        // Ejecutar un paso de la máquina
+        function siguientePaso() {
+            if (estadoActual === 'q_accept' || estadoActual === 'q_reject') {
+                return;
+            }
+
+            const simboloLeido = cinta[posicionCabezal];
+            const transicion = tablaTransiciones[estadoActual][simboloLeido];
+
+            if (!transicion) {
+                estadoActual = 'q_reject';
+                inicializar();
+                return;
+            }
+
+            // Aplicar transición
+            cinta[posicionCabezal] = transicion.escribe;
+            estadoActual = transicion.siguienteEstado;
+            posicionCabezal += transicion.mueve === 'R' ? 1 : -1;
+            paso++;
+
+            // Asegurar que la cinta tenga espacio si el cabezal se mueve fuera
+            if (posicionCabezal < 0) {
+                cinta.unshift('B');
+                posicionCabezal = 0;
+            } else if (posicionCabezal >= cinta.length) {
+                cinta.push('B');
+            }
+
+            inicializar();
+        }
+
+        // Reiniciar la simulación
+        function reiniciar() {
+            const input = document.getElementById('input-cinta').value;
+            cinta = ['B', ...input.split(''), 'B']; // Agregar márgenes
+            posicionCabezal = 1; // Empezar en el primer símbolo
+            estadoActual = 'q0';
+            paso = 0;
+            inicializar();
+        }
+
+        // Event listeners
+        document.getElementById('iniciar').addEventListener('click', () => {
+            reiniciar();
+            const interval = setInterval(() => {
+                if (estadoActual !== 'q_accept' && estadoActual !== 'q_reject') {
+                    siguientePaso();
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1000);
+        });
+
+        document.getElementById('siguiente').addEventListener('click', siguientePaso);
+        document.getElementById('reiniciar').addEventListener('click', reiniciar);
+
+        // Inicializar al cargar
+        reiniciar();
+    </script>
+
 </body>
 </html>
