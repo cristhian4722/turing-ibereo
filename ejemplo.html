@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Máquina de Turing: Validar Paréntesis Anidados</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <h3>Máquina de Turing: Validar Paréntesis Anidados</h3>
+    
+    <div>
+        <label for="input-cinta">Cadena de paréntesis (usa '(' y ')'):</label>
+        <input type="text" id="input-cinta" value="(()())">
+        <button id="iniciar">Iniciar</button>
+        <button id="siguiente">Siguiente Paso</button>
+        <button id="reiniciar">Reiniciar</button>
+    </div>
+    
+    <p>
+        <strong>Estado actual:</strong><span id="estado-actual"> q0</span>
+        &nbsp;&nbsp;&nbsp;
+        <strong>Paso:</strong> <span id="paso-actual">0</span>
+    </p>
+    <div id="resultado"></div>
+    
+    <div id="cinta"></div>
+    
+    <h3>Tabla de Instrucciones (δ)</h3>
+    <table id="tabla-instrucciones">
+        <thead>
+            <tr>
+                <th>Estado</th>
+                <th>Lee</th>
+                <th>Escribe</th>
+                <th>Mueve</th>
+                <th>Siguiente Estado</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    
+</body>
+</html>
